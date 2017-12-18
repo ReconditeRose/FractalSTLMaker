@@ -1,0 +1,5 @@
+
+
+```
+python fractal_stl_maker.py --output-location ~/Desktop/juliaFractal.stl --window-height 400 --window-width 400 --iterations 80 --vertical-scale 0.2 --base-height 10
+```
