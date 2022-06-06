@@ -8,25 +8,31 @@ import math
 import logging
 
 class STLWriter(object):
-    """
-    TODO: Fill this in
-    """
     def __init__(self, output_location, triangle_count):
-        self.output_fp = open(output_location, 'w')
+        self.output_fp = open(output_location, 'wb')
         self._write_header(triangle_count)
 
+    def _write_to_file(self, bytes):
+        bytes.tofile(self.output_fp)
+
     def _write_header(self, triangle_count):
-        # write the header, 80 0s followed by the number of triangles
+        '''
+        write the header, 80 0s followed by the number of triangles
+        '''
         self.output_fp.write(b'\0' * 80)
         triangle_header_bytes = array.array('I', [triangle_count])
-        triangle_header_bytes.tofile(self.output_fp)
+        self._write_to_file(triangle_header_bytes)
 
-    #Vector operation used for computing the normal vector
     def _vector_subtract(self, vector_1, vector_2):
+        '''
+        Vector operation used for computing the normal vector
+        '''
         return [vector_1[0]-vector_2[0], vector_1[1]-vector_2[1], vector_1[2]-vector_2[2]]
 
-    #Computes the crossProduct of two vectors, which is he normal of a triangle
-    def _vector_normal(self, vector_1, vector_2):
+    def _normal_vector(self, vector_1, vector_2):
+        '''
+        Computes the cross product of two vectors, which is the normal of a triangle
+        '''
         vector_x = vector_1[1]*vector_2[2] - vector_1[2]*vector_2[1]
         vector_y = vector_1[2]*vector_2[0] - vector_1[0]*vector_2[2]
         vector_z = vector_1[0]*vector_2[1] - vector_1[1]*vector_2[0]
@@ -34,9 +40,6 @@ class STLWriter(object):
         return [vector_x*unit_magnitude, vector_y*unit_magnitude, vector_z*unit_magnitude]
 
     def write_triangle(self, point_1, point_2, point_3, inverted=False):
-        """
-        TODO: Fill this in
-        """
         logging.debug('Writing triangle with points {}, {}, {}'.format(str(point_1),
             str(point_2),
             str(point_3)))
@@ -44,12 +47,12 @@ class STLWriter(object):
             temp = point_3
             point_3 = point_2
             point_2 = temp
-        normal_vector = self._vector_normal(self._vector_subtract(point_3, point_1), 
+        normal_vector = self._normal_vector(self._vector_subtract(point_3, point_1), 
             self._vector_subtract(point_2, point_1))
 
         for vector in [normal_vector, point_1, point_2, point_3]:
             vector_bytes = array.array('f', vector)
-            vector_bytes.tofile(self.output_fp)
+            self._write_to_file(vector_bytes)
 
         triangle_attributes_bytes = array.array('B', [0, 0])
-        triangle_attributes_bytes.tofile(self.output_fp)
+        self._write_to_file(triangle_attributes_bytes)

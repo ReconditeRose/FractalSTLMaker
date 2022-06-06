@@ -5,15 +5,15 @@ Created on Dec 20, 2014
 Content: TODO
 '''
 
-def createGridBounds(xMin,xMax,yMin,yMax,pixelx,pixely,iterates,p=False):
+def create_grid_bounds(xMin,xMax,yMin,yMax,pixelx,pixely,iterates,p=False):
     x = (xMin + xMax)/2
     y = (yMin + yMax)/2
     width = (xMax - xMin)
     height = (yMax - yMin)
     
-    return createGrid(x,y,width,height,pixelx,pixely,iterates,p)
+    return create_grid(x,y,width,height,pixelx,pixely,iterates,p)
 
-def createGrid(x,y,width,height,pixelx,pixely,iterates,printout=False):
+def create_grid(x,y,width,height,pixelx,pixely,iterates,printout=False):
 
     results = [[0 for i in range(pixely)] for j in range(pixelx)]
 
@@ -50,5 +50,5 @@ def createGrid(x,y,width,height,pixelx,pixely,iterates,printout=False):
 if __name__ == "__main__":
     x = 5
     y = 5
-    data = createGridBounds(-2,2,-2,2,x,y,8,True)
+    data = create_grid_bounds(-2,2,-2,2,x,y,8,True)
     print(data)
