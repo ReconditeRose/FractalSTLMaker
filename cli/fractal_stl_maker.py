@@ -22,10 +22,18 @@ def format_fractal_map_for_stl(fractal_map, window_width, window_height, vertica
         formatted_data_map.append(row_map)
     return formatted_data_map
 
-def __find_largest_square(data, i, j, max_size):
+def __is_square_covered(x, y, square_covered, grid_height):
+    return square_covered[(grid_height)*x + y] == 1
+
+def __find_largest_square(data, i, j, max_size, square_covered, grid_height):
     if max_size == 1:
         return 1
     for new_size in range(1, max_size + 1):
+        for x in range(new_size):
+            if __is_square_covered(i + new_size - 1, j + x, square_covered, grid_height):
+                return max(new_size - 1, 1)
+            if __is_square_covered(i + x, j + new_size - 1, square_covered, grid_height):
+                return max(new_size - 1, 1)
         for x in range(new_size + 1):
             if (data[i][j][2] != data[i + new_size][j + x][2]) or (data[i][j][2] != data[i + x][j + new_size][2]):
                 return max(new_size - 1, 1)
@@ -44,11 +52,11 @@ def __write_surface_triangles(stl_writer, data, grid_width, grid_height):
     logging.info("Starting to write surface triangles")
     for i in range(grid_width):
         for j in range(grid_height):
-            if square_covered[(grid_height)*i + j] == 1:
+            if __is_square_covered(i, j, square_covered, grid_height):
                 continue
             
             max_allowed = min(grid_width - i, grid_height - j)
-            square_size = __find_largest_square(data, i, j, max_allowed)
+            square_size = __find_largest_square(data, i, j, max_allowed, square_covered, grid_height)
             points = [data[i][j], 
                 data[i + square_size][j], 
                 data[i][j + square_size], 
@@ -60,15 +68,17 @@ def __write_surface_triangles(stl_writer, data, grid_width, grid_height):
             # If there are four points:
             # 0 1
             # 2 3
-            # Render two triangles two triangles: 
+            # Render two triangles: 
             # 0 1     1
             # 2     2 3
             stl_writer.write_triangle(points[0], points[1], points[2])
             stl_writer.write_triangle(points[1], points[3], points[2])
-
             triangles += 2
             for x in range(i, i + square_size):
                 for y in range(j, j + square_size):
+                    if square_covered[(grid_height)*x + y] == 1:
+                        logging.error('Overlapping triangles detected')
+                        exit(1)
                     square_covered[(grid_height)*x + y] = 1
 
     logging.info("Finished writing surface triangles ({} ({:.2f}%) saved)".format(expected_triangles - triangles, 100 * (1 - triangles/expected_triangles)))
@@ -97,7 +107,7 @@ def generate_stl_from_map(data, output_location, floor_value = -1.0, x_center = 
 
     # Writing edges along parellel to the x dimension
     logging.info("Starting to write edge and base triangles along x edge dimension")
-    for i in range(grid_width - 1):
+    for i in range(grid_width):
         for j, inverted in [0, True], [grid_height, False]:
             point_1_value = data[i][j]
             point_2_value = data[i + 1][j]
@@ -112,7 +122,7 @@ def generate_stl_from_map(data, output_location, floor_value = -1.0, x_center = 
     # Writing edges along parelle to the y dimension
     logging.info("Starting to write edge and base triangles along y edge dimension")
     for j in range(grid_height):
-        for i, inverted in [0, False], [grid_width - 1, True]:
+        for i, inverted in [0, False], [grid_width , True]:
             point_1_value = data[i][j]
             point_2_value = data[i][j + 1]
             point_1_floor = [data[i][j][0], data[i][j][1], floor_value]
